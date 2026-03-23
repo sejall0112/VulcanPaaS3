@@ -1,9 +1,7 @@
-FROM prom/prometheus:v2.51.0
+FROM prom/prometheus:v2.53.0
 
 USER root
-
 COPY prometheus.yml /etc/prometheus/prometheus.yml
-
 USER nobody
 
 EXPOSE 9090

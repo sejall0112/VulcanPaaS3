@@ -1,6 +1,7 @@
 FROM node:20-alpine
 
-RUN apk add --no-cache curl dos2unix nginx
+RUN apk update && apk upgrade --no-cache && \
+    apk add --no-cache curl dos2unix nginx
 
 WORKDIR /app
 

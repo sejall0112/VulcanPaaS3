@@ -1,6 +1,7 @@
 FROM node:20-alpine
 
-RUN apk add --no-cache curl dos2unix && \
+RUN apk update && apk upgrade --no-cache && \
+    apk add --no-cache curl dos2unix && \
     npm install -g npm@latest
 
 WORKDIR /app
