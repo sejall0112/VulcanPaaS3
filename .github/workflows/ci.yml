@@ -1,0 +1,121 @@
+name: VulcanPaaS CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/sejall0112/vulcanpaas
+
+jobs:
+  lint-and-audit:
+    name: Lint and Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install API dependencies
+        working-directory: services/api
+        run: npm ci
+
+      - name: Run npm audit (API)
+        working-directory: services/api
+        run: |
+          npm audit --audit-level=high
+          if [ $? -ne 0 ]; then
+            echo "ERROR: npm audit found HIGH or CRITICAL vulnerabilities"
+            exit 1
+          fi
+
+      - name: Install Frontend dependencies
+        working-directory: services/frontend
+        run: npm ci
+
+      - name: Run npm audit (Frontend)
+        working-directory: services/frontend
+        run: |
+          npm audit --audit-level=high
+          if [ $? -ne 0 ]; then
+            echo "ERROR: npm audit found HIGH or CRITICAL vulnerabilities"
+            exit 1
+          fi
+
+  build-and-push:
+    name: Build and Push to GHCR
+    runs-on: ubuntu-latest
+    needs: lint-and-audit
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set image tag
+        id: tag
+        run: echo "IMAGE_TAG=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
+
+      - name: Build and push API image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./services/api
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}-api:${{ steps.tag.outputs.IMAGE_TAG }}
+            ${{ env.IMAGE_PREFIX }}-api:latest
+
+      - name: Build and push nginx image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./services/nginx
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}-nginx:${{ steps.tag.outputs.IMAGE_TAG }}
+            ${{ env.IMAGE_PREFIX }}-nginx:latest
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./services/frontend
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}-frontend:${{ steps.tag.outputs.IMAGE_TAG }}
+            ${{ env.IMAGE_PREFIX }}-frontend:latest
+
+      - name: Build and push prometheus image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./services/prometheus
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}-prometheus:${{ steps.tag.outputs.IMAGE_TAG }}
+            ${{ env.IMAGE_PREFIX }}-prometheus:latest
+
+      - name: Build and push grafana image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./services/grafana
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}-grafana:${{ steps.tag.outputs.IMAGE_TAG }}
+            ${{ env.IMAGE_PREFIX }}-grafana:latest
+
+      - name: Save image tag to output
+        run: echo "IMAGE_TAG=${{ steps.tag.outputs.IMAGE_TAG }}" >> $GITHUB_ENV

@@ -1,0 +1,167 @@
+networks:
+  vulcan-net:
+    driver: bridge
+
+volumes:
+  logs:
+  prometheus_data:
+  grafana_data:
+  deploy_data:
+  vulcan_data:
+
+services:
+
+  api:
+    build:
+      context: ./services/api
+      dockerfile: Dockerfile
+    container_name: api
+    restart: unless-stopped
+    expose:
+      - "8080"
+    env_file: .env
+    networks:
+      - vulcan-net
+    volumes:
+      - logs:/app/logs
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 2s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512M
+
+  nginx:
+    build:
+      context: ./services/nginx
+      dockerfile: Dockerfile
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    networks:
+      - vulcan-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/nginx-health"]
+      interval: 10s
+      timeout: 2s
+      retries: 3
+      start_period: 15s
+    depends_on:
+      api:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+
+  frontend:
+    build:
+      context: ./services/frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    restart: unless-stopped
+    expose:
+      - "3000"
+    networks:
+      - vulcan-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 2s
+      retries: 3
+      start_period: 15s
+    depends_on:
+      nginx:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+
+  prometheus:
+    build:
+      context: ./services/prometheus
+      dockerfile: Dockerfile
+    container_name: prometheus
+    restart: unless-stopped
+    expose:
+      - "9090"
+    networks:
+      - vulcan-net
+    volumes:
+      - prometheus_data:/prometheus
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 10s
+      timeout: 2s
+      retries: 3
+      start_period: 15s
+    depends_on:
+      api:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512M
+
+  grafana:
+    build:
+      context: ./services/grafana
+      dockerfile: Dockerfile
+    container_name: grafana
+    restart: unless-stopped
+    expose:
+      - "3000"
+    networks:
+      - vulcan-net
+    volumes:
+      - grafana_data:/var/lib/grafana
+    env_file: .env
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 2s
+      retries: 3
+      start_period: 15s
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512M

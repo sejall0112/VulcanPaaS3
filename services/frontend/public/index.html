@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VulcanPaaS</title>
+  <style>
+    body { font-family: sans-serif; background: #0f0f0f; color: #e0e0e0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+    h1 { color: #ff4500; font-size: 2.5rem; }
+    p { color: #aaa; }
+    #status { margin-top: 1rem; padding: 1rem 2rem; background: #1a1a1a; border-radius: 8px; font-family: monospace; font-size: 0.9rem; }
+    .ok { color: #00ff88; }
+    .err { color: #ff4444; }
+  </style>
+</head>
+<body>
+  <h1>?? VulcanPaaS</h1>
+  <p>Internal Platform as a Service</p>
+  <div id="status">Checking API status...</div>
+
+  <script>
+    async function checkStatus() {
+      const el = document.getElementById('status');
+      try {
+        const res = await fetch('/api/status');
+        const data = await res.json();
+        el.innerHTML = '<span class="ok">? API: ' + data.status + ' — version: ' + data.version + '</span>';
+      } catch (e) {
+        el.innerHTML = '<span class="err">? API unreachable: ' + e.message + '</span>';
+      }
+    }
+    checkStatus();
+    setInterval(checkStatus, 10000);
+  </script>
+</body>
+</html>

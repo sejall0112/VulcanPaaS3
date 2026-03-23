@@ -1,0 +1,15 @@
+{
+  "name": "vulcan-api",
+  "version": "1.0.0",
+  "description": "VulcanPaaS API Service",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "dependencies": {
+    "express": "4.18.2",
+    "prom-client": "15.1.0",
+    "uuid": "9.0.0"
+  }
+}
