@@ -13,46 +13,34 @@ env:
 jobs:
 
   lint-and-audit:
-    name: Lint and Audit
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: 20
 
-      - name: Install API dependencies
+      - name: API install
         working-directory: services/api
         run: npm ci
 
-      - name: Run npm audit (API)
+      - name: API audit
         working-directory: services/api
-        run: |
-          npm audit --audit-level=high
-          if [ $? -ne 0 ]; then
-            echo "ERROR: npm audit found HIGH or CRITICAL vulnerabilities"
-            exit 1
-          fi
+        run: npm audit --audit-level=high
 
-      - name: Install Frontend dependencies
+      - name: Frontend install
         working-directory: services/frontend
         run: npm ci
 
-      - name: Run npm audit (Frontend)
+      - name: Frontend audit
         working-directory: services/frontend
-        run: |
-          npm audit --audit-level=high
-          if [ $? -ne 0 ]; then
-            echo "ERROR: npm audit found HIGH or CRITICAL vulnerabilities"
-            exit 1
-          fi
+        run: npm audit --audit-level=high
+
+
 
   build-and-push:
-    name: Build and Push to GHCR
     runs-on: ubuntu-latest
     needs: lint-and-audit
 
@@ -61,72 +49,53 @@ jobs:
       packages: write
 
     steps:
+
       - uses: actions/checkout@v4
 
-      - name: Login GHCR
-        uses: docker/login-action@v3
+      - uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set tag
-        id: tag
-        run: echo "IMAGE_TAG=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
-
 
       - name: Build API
         uses: docker/build-push-action@v5
         with:
           context: ./services/api
           push: true
-          tags: |
-            ${{ env.IMAGE_PREFIX }}-api:${{ steps.tag.outputs.IMAGE_TAG }}
-            ${{ env.IMAGE_PREFIX }}-api:latest
-
+          tags: ghcr.io/sejall0112/vulcanpaas-api:latest
 
       - name: Build nginx
         uses: docker/build-push-action@v5
         with:
           context: ./services/nginx
           push: true
-          tags: |
-            ${{ env.IMAGE_PREFIX }}-nginx:${{ steps.tag.outputs.IMAGE_TAG }}
-            ${{ env.IMAGE_PREFIX }}-nginx:latest
-
+          tags: ghcr.io/sejall0112/vulcanpaas-nginx:latest
 
       - name: Build frontend
         uses: docker/build-push-action@v5
         with:
           context: ./services/frontend
           push: true
-          tags: |
-            ${{ env.IMAGE_PREFIX }}-frontend:${{ steps.tag.outputs.IMAGE_TAG }}
-            ${{ env.IMAGE_PREFIX }}-frontend:latest
-
+          tags: ghcr.io/sejall0112/vulcanpaas-frontend:latest
 
       - name: Build prometheus
         uses: docker/build-push-action@v5
         with:
           context: ./services/prometheus
           push: true
-          tags: |
-            ${{ env.IMAGE_PREFIX }}-prometheus:${{ steps.tag.outputs.IMAGE_TAG }}
-            ${{ env.IMAGE_PREFIX }}-prometheus:latest
-
+          tags: ghcr.io/sejall0112/vulcanpaas-prometheus:latest
 
       - name: Build grafana
         uses: docker/build-push-action@v5
         with:
           context: ./services/grafana
           push: true
-          tags: |
-            ${{ env.IMAGE_PREFIX }}-grafana:${{ steps.tag.outputs.IMAGE_TAG }}
-            ${{ env.IMAGE_PREFIX }}-grafana:latest
+          tags: ghcr.io/sejall0112/vulcanpaas-grafana:latest
 
 
-   trivy-scan:
-    name: Trivy Security Scan
+
+  trivy-scan:
     runs-on: ubuntu-latest
     needs: build-and-push
 
@@ -135,10 +104,10 @@ jobs:
       packages: read
 
     steps:
+
       - uses: actions/checkout@v4
 
-      - name: Login GHCR
-        uses: docker/login-action@v3
+      - uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -147,7 +116,7 @@ jobs:
       - name: Scan API
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.IMAGE_PREFIX }}-api:latest
+          image-ref: ghcr.io/sejall0112/vulcanpaas-api:latest
           exit-code: '1'
           severity: HIGH,CRITICAL
           ignore-unfixed: true
@@ -155,7 +124,7 @@ jobs:
       - name: Scan nginx
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.IMAGE_PREFIX }}-nginx:latest
+          image-ref: ghcr.io/sejall0112/vulcanpaas-nginx:latest
           exit-code: '1'
           severity: CRITICAL
           ignore-unfixed: true
@@ -163,7 +132,7 @@ jobs:
       - name: Scan frontend
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.IMAGE_PREFIX }}-frontend:latest
+          image-ref: ghcr.io/sejall0112/vulcanpaas-frontend:latest
           exit-code: '1'
           severity: CRITICAL
           ignore-unfixed: true
@@ -171,7 +140,7 @@ jobs:
       - name: Scan prometheus
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.IMAGE_PREFIX }}-prometheus:latest
+          image-ref: ghcr.io/sejall0112/vulcanpaas-prometheus:latest
           exit-code: '1'
           severity: CRITICAL
           ignore-unfixed: true
@@ -179,7 +148,7 @@ jobs:
       - name: Scan grafana
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.IMAGE_PREFIX }}-grafana:latest
+          image-ref: ghcr.io/sejall0112/vulcanpaas-grafana:latest
           exit-code: '1'
           severity: CRITICAL
           ignore-unfixed: true
