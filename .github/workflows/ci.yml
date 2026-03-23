@@ -135,10 +135,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+
       - name: Save deploy history
         run: |
-          echo "Saving deploy history"
-
           echo "{ 
             \"time\": \"$(date)\",
             \"version\": \"latest\"
@@ -151,29 +150,32 @@ jobs:
           sudo apt-get install -y docker-compose
 
 
+      - name: Create env file
+        run: |
+          echo "NODE_ENV=production" >> .env
+          echo "PORT=3000" >> .env
+          echo "API_URL=http://api:3000" >> .env
+
+
       - name: Start stack
         run: |
           docker-compose up -d
 
 
       - name: Wait for services
-        run: |
-          sleep 10
+        run: sleep 10
 
 
       - name: Smoke test API
-        run: |
-          curl --fail http://localhost:3000/health
+        run: curl --fail http://localhost:3000/health
 
 
       - name: Smoke test nginx
-        run: |
-          curl --fail http://localhost/nginx-health
+        run: curl --fail http://localhost/nginx-health
 
 
       - name: Smoke test metrics
-        run: |
-          curl --fail http://localhost:3000/metrics
+        run: curl --fail http://localhost:3000/metrics
 
 
       - name: Done
