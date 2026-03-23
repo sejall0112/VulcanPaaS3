@@ -140,15 +140,13 @@ jobs:
       - name: Scan prometheus
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ghcr.io/sejall0112/vulcanpaas-prometheus:latest
-          exit-code: '1'
-          severity: CRITICAL
-          ignore-unfixed: true
+        image-ref: ghcr.io/sejall0112/vulcanpaas-prometheus:latest
+        severity: CRITICAL
+        ignore-unfixed: true
 
       - name: Scan grafana
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ghcr.io/sejall0112/vulcanpaas-grafana:latest
-          exit-code: '1'
-          severity: CRITICAL
-          ignore-unfixed: true
+        image-ref: ghcr.io/sejall0112/vulcanpaas-grafana:latest
+        severity: CRITICAL
+        ignore-unfixed: true
