@@ -127,7 +127,6 @@ jobs:
             ${{ env.IMAGE_PREFIX }}-grafana:latest
 
 
-
   trivy-scan:
     name: Trivy Security Scan
     runs-on: ubuntu-latest
@@ -159,12 +158,12 @@ jobs:
 
 
       - name: Scan nginx
-  uses: aquasecurity/trivy-action@master
-  with:
-    image-ref: ${{ env.IMAGE_PREFIX }}-nginx:latest
-    exit-code: '1'
-    severity: CRITICAL
-    ignore-unfixed: true
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.IMAGE_PREFIX }}-nginx:latest
+          exit-code: '1'
+          severity: CRITICAL
+          ignore-unfixed: true
 
 
       - name: Scan frontend
