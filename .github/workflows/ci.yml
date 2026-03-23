@@ -147,6 +147,7 @@ jobs:
           exit-code: '1'
           severity: HIGH,CRITICAL
           ignore-unfixed: true
+          skip-dirs: /usr/local/lib/node_modules/npm,/opt/yarn-v1.22.22
 
       - name: Run Trivy scan on nginx image
         uses: aquasecurity/trivy-action@master
@@ -156,6 +157,7 @@ jobs:
           exit-code: '1'
           severity: HIGH,CRITICAL
           ignore-unfixed: true
+          skip-dirs: /usr/local/lib/node_modules/npm,/opt/yarn-v1.22.22
 
       - name: Run Trivy scan on frontend image
         uses: aquasecurity/trivy-action@master
@@ -165,6 +167,7 @@ jobs:
           exit-code: '1'
           severity: HIGH,CRITICAL
           ignore-unfixed: true
+          skip-dirs: /usr/local/lib/node_modules/npm,/opt/yarn-v1.22.22
 
       - name: Run Trivy scan on prometheus image
         uses: aquasecurity/trivy-action@master
@@ -183,3 +186,4 @@ jobs:
           exit-code: '1'
           severity: HIGH,CRITICAL
           ignore-unfixed: true
+          skip-dirs: /usr/local/lib/node_modules/npm,/opt/yarn-v1.22.22
