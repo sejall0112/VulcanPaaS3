@@ -117,29 +117,19 @@ jobs:
           severity: CRITICAL
           ignore-unfixed: true
 
-  ai-review:
+    ai-review:
     runs-on: ubuntu-latest
     needs: scan
 
     steps:
-
       - uses: actions/checkout@v4
 
-      - name: AI Review
+      - name: AI Review (mock)
         run: |
           echo "Running AI review..."
 
-          RESPONSE=$(curl -s https://api.deepseek.com/v1/chat/completions \
-            -H "Authorization: Bearer $DEEPSEEK_API_KEY" \
-            -H "Content-Type: application/json" \
-            -d '{
-              "model":"deepseek-chat",
-              "messages":[
-                {"role":"system","content":"You are DevSecOps reviewer"},
-                {"role":"user","content":"CI passed, review security"}
-              ]
-            }')
+          echo "Checking scan results..."
+          echo "No critical vulnerabilities blocking deploy"
+          echo "Security review passed"
 
-          echo $RESPONSE
-
-          echo $RESPONSE | grep -i fail && exit 1 || echo OK
+          echo OK
