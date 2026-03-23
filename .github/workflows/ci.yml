@@ -144,8 +144,37 @@ jobs:
             \"version\": \"latest\"
           }" >> deploy-history.json
 
-      - name: Simulated deploy
+
+      - name: Install docker compose
         run: |
-          echo "Pull images"
-          echo "Compose up"
-          echo "Health OK"
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+
+      - name: Start stack
+        run: |
+          docker-compose up -d
+
+
+      - name: Wait for services
+        run: |
+          sleep 10
+
+
+      - name: Smoke test API
+        run: |
+          curl --fail http://localhost:3000/health
+
+
+      - name: Smoke test nginx
+        run: |
+          curl --fail http://localhost/nginx-health
+
+
+      - name: Smoke test metrics
+        run: |
+          curl --fail http://localhost:3000/metrics
+
+
+      - name: Done
+        run: echo "DEPLOY OK"
