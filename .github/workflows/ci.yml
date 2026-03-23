@@ -167,12 +167,12 @@ jobs:
 
 
       - name: Scan frontend
-  uses: aquasecurity/trivy-action@master
-  with:
-    image-ref: ${{ env.IMAGE_PREFIX }}-frontend:latest
-    exit-code: '1'
-    severity: CRITICAL
-    ignore-unfixed: true
+        uses: aquasecurity/trivy-action@master
+        with:
+        image-ref: ${{ env.IMAGE_PREFIX }}-frontend:latest
+        exit-code: '1'
+        severity: CRITICAL
+        ignore-unfixed: true
 
 
       - name: Scan prometheus
