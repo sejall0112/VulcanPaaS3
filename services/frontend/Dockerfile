@@ -6,7 +6,7 @@ RUN apk update && apk upgrade --no-cache && \
 WORKDIR /app
 
 RUN addgroup -S vulcan && adduser -S vulcan -G vulcan
-# code 
+
 COPY package*.json ./
 RUN npm ci --omit=dev
 
